@@ -10,7 +10,8 @@ dependencies = [
     "django (>=5.2,<5.3)",
     "djangorestframework (>=3.18.0,<4.0.0)",
     "psycopg[binary] (>=3.3.5,<4.0.0)",
-    "pillow (>=12.3.0,<13.0.0)"
+    "pillow (>=12.3.0,<13.0.0)",
+    "djangorestframework-stubs (>=3.18.1,<4.0.0)"
 ]
 
 
