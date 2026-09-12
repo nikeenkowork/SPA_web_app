@@ -1,11 +1,13 @@
-from django.urls import path, include
+from django.urls import include, path
 from rest_framework.routers import DefaultRouter
+from users.views import PaymentListView
 
 from .views import (
     CourseViewSet,
     LessonListCreateView,
     LessonRetrieveUpdateDestroyView,
 )
+
 
 router = DefaultRouter()
 router.register("courses", CourseViewSet, basename="course")
@@ -22,5 +24,10 @@ urlpatterns = [
         "lessons/<int:pk>/",
         LessonRetrieveUpdateDestroyView.as_view(),
         name="lesson-detail",
+    ),
+    path(
+        "payments/",
+        PaymentListView.as_view(),
+        name="payment-list",
     ),
 ]
