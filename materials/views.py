@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from users.filters import PaymentFilter
 from users.models import Payment
-from users.permissions import IsModerator
+from users.permissions import IsModerator, IsOwner
 
 from .models import Course, Lesson
 from .serializers import (
@@ -18,36 +18,53 @@ from .serializers import (
 class CourseViewSet(viewsets.ModelViewSet):
     """CRUD курсов."""
 
-    queryset = Course.objects.all()
     serializer_class = CourseSerializer
 
+    def get_queryset(self):
+        if IsModerator().has_permission(self.request, self):
+            return Course.objects.all()
+
+        return Course.objects.filter(owner=self.request.user)
+
     def get_permissions(self):
-        if self.action in [
-            "list",
-            "retrieve",
-            "update",
-            "partial_update",
-        ]:
-            permission_classes = [IsAuthenticated, IsModerator]
-        else:
+        if self.action == "create":
             permission_classes = [IsAuthenticated]
+        else:
+            permission_classes = [
+                IsAuthenticated,
+                IsModerator | IsOwner,
+            ]
 
         return [permission() for permission in permission_classes]
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
 
 
 class LessonListCreateView(generics.ListCreateAPIView):
     """Список и создание уроков."""
 
-    queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
 
+    def get_queryset(self):
+        if IsModerator().has_permission(self.request, self):
+            return Lesson.objects.all()
+
+        return Lesson.objects.filter(owner=self.request.user)
+
     def get_permissions(self):
-        if self.request.method == "GET":
-            permission_classes = [IsAuthenticated, IsModerator]
-        else:
+        if self.request.method == "POST":
             permission_classes = [IsAuthenticated]
+        else:
+            permission_classes = [
+                IsAuthenticated,
+                IsModerator | IsOwner,
+            ]
 
         return [permission() for permission in permission_classes]
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
 
 
 class LessonRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
@@ -55,14 +72,10 @@ class LessonRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
 
     queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
-
-    def get_permissions(self):
-        if self.request.method in ["GET", "PUT", "PATCH"]:
-            permission_classes = [IsAuthenticated, IsModerator]
-        else:
-            permission_classes = [IsAuthenticated]
-
-        return [permission() for permission in permission_classes]
+    permission_classes = [
+        IsAuthenticated,
+        IsModerator | IsOwner,
+    ]
 
 
 class PaymentListView(generics.ListAPIView):
