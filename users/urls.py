@@ -5,7 +5,7 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 
-from .views import RegistrationView, UserViewSet
+from .views import RegistrationView, SubscriptionView, UserViewSet
 
 
 router = DefaultRouter()
@@ -16,6 +16,11 @@ urlpatterns = [
     path("", include(router.urls)),
     path("register/", RegistrationView.as_view(), name="register"),
     path("token/", TokenObtainPairView.as_view(), name="token"),
+    path(
+        "subscription/",
+        SubscriptionView.as_view(),
+        name="subscription",
+    ),
     path(
         "token/refresh/",
         TokenRefreshView.as_view(),

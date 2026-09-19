@@ -1,5 +1,4 @@
 from django.conf import settings
-from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.contrib.auth.models import AbstractUser, UserManager
 
@@ -90,3 +89,29 @@ class Payment(models.Model):
 
     def __str__(self):
         return f"{self.user.email} — {self.amount}"
+
+
+class Subscription(models.Model):
+    """Подписка пользователя на обновления курса."""
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="subscriptions",
+        verbose_name="Пользователь",
+    )
+
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name="subscriptions",
+        verbose_name="Курс",
+    )
+
+    class Meta:
+        unique_together = ("user", "course")
+        verbose_name = "Подписка"
+        verbose_name_plural = "Подписки"
+
+    def __str__(self):
+        return f"{self.user.email} — {self.course.name}"
