@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from users.filters import PaymentFilter
 from users.models import Payment
 from users.permissions import IsModerator, IsOwner
+from .paginators import CustomPagination
 
 from .models import Course, Lesson
 from .serializers import (
@@ -19,6 +20,7 @@ class CourseViewSet(viewsets.ModelViewSet):
     """CRUD курсов."""
 
     serializer_class = CourseSerializer
+    pagination_class = CustomPagination
 
     def get_queryset(self):
         if IsModerator().has_permission(self.request, self):
@@ -45,6 +47,7 @@ class LessonListCreateView(generics.ListCreateAPIView):
     """Список и создание уроков."""
 
     serializer_class = LessonSerializer
+    pagination_class = CustomPagination
 
     def get_queryset(self):
         if IsModerator().has_permission(self.request, self):
