@@ -23,6 +23,9 @@ class CourseViewSet(viewsets.ModelViewSet):
     pagination_class = CustomPagination
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Course.objects.none()
+
         if IsModerator().has_permission(self.request, self):
             return Course.objects.all()
 
@@ -50,6 +53,9 @@ class LessonListCreateView(generics.ListCreateAPIView):
     pagination_class = CustomPagination
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Lesson.objects.none()
+
         if IsModerator().has_permission(self.request, self):
             return Lesson.objects.all()
 

@@ -78,6 +78,7 @@ class Payment(models.Model):
     class PaymentMethod(models.TextChoices):
         CASH = "cash", "Наличные"
         TRANSFER = "transfer", "Перевод на счет"
+        STRIPE = "stripe", "Stripe"
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -113,6 +114,19 @@ class Payment(models.Model):
         max_digits=10,
         decimal_places=2,
         verbose_name="Сумма оплаты",
+    )
+
+    payment_url = models.URLField(
+        blank=True,
+        null=True,
+        verbose_name="Ссылка на оплату",
+    )
+
+    stripe_session_id = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        verbose_name="Stripe Session ID",
     )
 
     payment_method = models.CharField(

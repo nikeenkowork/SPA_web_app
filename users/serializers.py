@@ -40,3 +40,33 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         user.save()
 
         return user
+
+
+class PaymentCreateSerializer(serializers.Serializer):
+    """Запрос на создание платежа."""
+
+    course = serializers.IntegerField(
+        help_text="ID курса, который необходимо оплатить.",
+    )
+
+
+class PaymentCreateResponseSerializer(serializers.Serializer):
+    """Ответ после создания платежа."""
+
+    payment_id = serializers.IntegerField()
+    payment_url = serializers.URLField()
+    session_id = serializers.CharField()
+
+
+class SubscriptionSerializer(serializers.Serializer):
+    """Запрос на добавление или удаление подписки."""
+
+    course = serializers.IntegerField(
+        help_text="ID курса.",
+    )
+
+
+class SubscriptionResponseSerializer(serializers.Serializer):
+    """Ответ операции с подпиской."""
+
+    message = serializers.CharField()

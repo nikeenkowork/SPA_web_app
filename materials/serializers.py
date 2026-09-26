@@ -31,17 +31,18 @@ class CourseSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "name",
+            "price",
             "description",
             "lessons_count",
             "lessons",
             "is_subscribed",
         ]
 
-    def get_lessons_count(self, obj):
+    def get_lessons_count(self, obj) -> int:
         """Возвращает количество уроков в курсе."""
         return obj.lessons.count()
 
-    def get_is_subscribed(self, obj):
+    def get_is_subscribed(self, obj) -> bool:
         """Проверяет подписку текущего пользователя на курс."""
 
         user = self.context["request"].user

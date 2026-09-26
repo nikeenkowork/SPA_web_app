@@ -1,6 +1,7 @@
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import generics, viewsets
+from drf_spectacular.utils import OpenApiResponse, extend_schema
+from rest_framework import generics, status, viewsets
 from rest_framework.filters import OrderingFilter
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -12,7 +13,19 @@ from materials.serializers import PaymentSerializer
 
 from .filters import PaymentFilter
 from .models import Payment, Subscription, User
-from .serializers import UserRegistrationSerializer, UserSerializer
+from .serializers import (
+    PaymentCreateResponseSerializer,
+    PaymentCreateSerializer,
+    SubscriptionResponseSerializer,
+    SubscriptionSerializer,
+    UserRegistrationSerializer,
+    UserSerializer,
+)
+from .services.stripe_service import (
+    create_checkout_session,
+    create_stripe_price,
+    create_stripe_product,
+)
 
 
 class PaymentListView(ListAPIView):
@@ -48,6 +61,23 @@ class RegistrationView(generics.CreateAPIView):
     permission_classes = [AllowAny]
 
 
+@extend_schema(
+    summary="Добавление или удаление подписки",
+    description=(
+        "Добавляет подписку пользователя на курс "
+        "или удаляет существующую подписку."
+    ),
+    request=SubscriptionSerializer,
+    responses={
+        200: SubscriptionResponseSerializer,
+        401: OpenApiResponse(
+            description="Пользователь не авторизован.",
+        ),
+        404: OpenApiResponse(
+            description="Курс не найден.",
+        ),
+    },
+)
 class SubscriptionView(APIView):
     """Установка и удаление подписки на курс."""
 
@@ -82,3 +112,57 @@ class SubscriptionView(APIView):
         )
 
 
+@extend_schema(
+    summary="Создание платежа через Stripe",
+    description=(
+        "Создает платеж для выбранного курса через Stripe "
+        "и возвращает ссылку на страницу оплаты."
+    ),
+    request=PaymentCreateSerializer,
+    responses={
+        201: PaymentCreateResponseSerializer,
+        401: OpenApiResponse(
+            description="Пользователь не авторизован.",
+        ),
+        404: OpenApiResponse(
+            description="Курс не найден.",
+        ),
+    },
+)
+class CreatePaymentView(APIView):
+    """Создание платежа через Stripe."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        course_id = request.data.get("course")
+
+        course = get_object_or_404(
+            Course,
+            id=course_id,
+        )
+
+        product = create_stripe_product(course)
+
+        price = create_stripe_price(
+            course,
+            product.id,
+        )
+
+        session = create_checkout_session(price.id)
+
+        payment = Payment.objects.create(
+            user=request.user,
+            course=course,
+            amount=course.price,
+            payment_method="transfer",
+        )
+
+        return Response(
+            {
+                "payment_id": payment.id,
+                "payment_url": session.url,
+                "session_id": session.id,
+            },
+            status=status.HTTP_201_CREATED,
+        )
