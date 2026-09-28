@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "materials",
     "django_filters",
     "drf_spectacular",
+    "django_celery_beat",
 ]
 
 MIDDLEWARE = [
@@ -154,3 +155,21 @@ SPECTACULAR_SETTINGS = {
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
 }
+
+REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+REDIS_PORT = os.getenv("REDIS_PORT", "6379")
+REDIS_DB = os.getenv("REDIS_DB", "0")
+
+CELERY_BROKER_URL = (
+    f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}"
+)
+
+CELERY_RESULT_BACKEND = (
+    f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}"
+)
+
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+
+CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
