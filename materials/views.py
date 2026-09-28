@@ -4,9 +4,10 @@ from rest_framework.filters import OrderingFilter
 from rest_framework.permissions import IsAuthenticated
 
 from users.filters import PaymentFilter
-from users.models import Payment
+from users.models import Payment, Subscription
 from users.permissions import IsModerator, IsOwner
 from .paginators import CustomPagination
+from .tasks import send_course_update_email
 
 from .models import Course, Lesson
 from .serializers import (
@@ -44,6 +45,19 @@ class CourseViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+
+    def perform_update(self, serializer):
+        course = serializer.save()
+
+        subscriptions = Subscription.objects.filter(
+            course=course
+        ).select_related("user")
+
+        for subscription in subscriptions:
+            send_course_update_email.delay(
+                subscription.user.email,
+                course.name,
+            )
 
 
 class LessonListCreateView(generics.ListCreateAPIView):
