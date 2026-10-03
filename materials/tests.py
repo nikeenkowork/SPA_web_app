@@ -3,7 +3,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from materials.models import Course, Lesson
-from users.models import Subscription, User
+from users.models import User
 
 
 class LessonAPITests(APITestCase):
@@ -35,6 +35,7 @@ class LessonAPITests(APITestCase):
         self.course = Course.objects.create(
             name="Python курс",
             description="Курс по Python",
+            price=1000,
             owner=self.user,
         )
 
@@ -49,6 +50,8 @@ class LessonAPITests(APITestCase):
         self.lessons_url = "/api/lessons/"
 
     def test_create_lesson(self):
+        """Авторизованный пользователь может создать урок."""
+
         self.client.force_authenticate(user=self.user)
 
         data = {
@@ -64,8 +67,18 @@ class LessonAPITests(APITestCase):
             format="json",
         )
 
-        print("STATUS:", response.status_code)
-        print("DATA:", response.data)
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_201_CREATED,
+        )
+        self.assertEqual(
+            response.data["name"],
+            "Урок 2",
+        )
+        self.assertEqual(
+            response.data["owner"],
+            self.user.id,
+        )
 
     def test_create_lesson_unauthenticated(self):
         """Неавторизованный пользователь не может создать урок."""
@@ -181,7 +194,6 @@ class LessonAPITests(APITestCase):
             status.HTTP_403_FORBIDDEN,
         )
 
-
     def test_delete_own_lesson(self):
         """Владелец может удалить свой урок."""
 
@@ -211,4 +223,7 @@ class LessonAPITests(APITestCase):
         self.assertEqual(
             response.status_code,
             status.HTTP_403_FORBIDDEN,
+        )
+        self.assertTrue(
+            Lesson.objects.filter(id=self.lesson.id).exists(),
         )
