@@ -168,6 +168,197 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/habits/:
+    get:
+      operationId: habits_list
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      tags:
+      - habits
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedHabitList'
+          description: ''
+    post:
+      operationId: habits_create
+      tags:
+      - habits
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Habit'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Habit'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Habit'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Habit'
+          description: ''
+  /api/habits/{id}/:
+    get:
+      operationId: habits_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this habit.
+        required: true
+      tags:
+      - habits
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Habit'
+          description: ''
+    put:
+      operationId: habits_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this habit.
+        required: true
+      tags:
+      - habits
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Habit'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Habit'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Habit'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Habit'
+          description: ''
+    patch:
+      operationId: habits_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this habit.
+        required: true
+      tags:
+      - habits
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedHabit'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedHabit'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedHabit'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Habit'
+          description: ''
+    delete:
+      operationId: habits_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this habit.
+        required: true
+      tags:
+      - habits
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/habits/public/:
+    get:
+      operationId: habits_public_list
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      tags:
+      - habits
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedHabitList'
+          description: ''
   /api/lessons/:
     get:
       operationId: lessons_list
@@ -341,6 +532,18 @@ paths:
         name: lesson
         schema:
           type: integer
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
       - name: ordering
         required: false
         in: query
@@ -369,9 +572,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Payment'
+                $ref: '#/components/schemas/PaginatedPaymentList'
           description: ''
   /api/payments/create/:
     post:
@@ -526,6 +727,18 @@ paths:
       operationId: users_list
       description: CRUD пользователей.
       parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
       - name: ordering
         required: false
         in: query
@@ -541,9 +754,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/User'
+                $ref: '#/components/schemas/PaginatedUserList'
           description: ''
     post:
       operationId: users_create
@@ -717,6 +928,46 @@ components:
       - lessons_count
       - name
       - price
+    Habit:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        place:
+          type: string
+          maxLength: 255
+        time:
+          type: string
+          format: time
+        action:
+          type: string
+        is_pleasant:
+          type: boolean
+        periodicity:
+          type: integer
+          maximum: 7
+          minimum: 1
+        reward:
+          type: string
+        duration:
+          type: integer
+          maximum: 120
+          minimum: 0
+        is_public:
+          type: boolean
+        user:
+          type: integer
+          readOnly: true
+        related_habit:
+          type: integer
+          nullable: true
+      required:
+      - action
+      - id
+      - place
+      - time
+      - user
     Lesson:
       type: object
       description: Сериализатор для модели урока.
@@ -776,6 +1027,29 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Course'
+    PaginatedHabitList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Habit'
     PaginatedLessonList:
       type: object
       required:
@@ -799,6 +1073,52 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Lesson'
+    PaginatedPaymentList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Payment'
+    PaginatedUserList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
     PatchedCourse:
       type: object
       description: Сериализатор для модели курса.
@@ -831,6 +1151,40 @@ components:
           type: boolean
           description: Проверяет подписку текущего пользователя на курс.
           readOnly: true
+    PatchedHabit:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        place:
+          type: string
+          maxLength: 255
+        time:
+          type: string
+          format: time
+        action:
+          type: string
+        is_pleasant:
+          type: boolean
+        periodicity:
+          type: integer
+          maximum: 7
+          minimum: 1
+        reward:
+          type: string
+        duration:
+          type: integer
+          maximum: 120
+          minimum: 0
+        is_public:
+          type: boolean
+        user:
+          type: integer
+          readOnly: true
+        related_habit:
+          type: integer
+          nullable: true
     PatchedLesson:
       type: object
       description: Сериализатор для модели урока.
