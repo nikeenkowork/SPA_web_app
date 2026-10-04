@@ -1,0 +1,14 @@
+.venv/
+.git/
+.idea/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+.env
+
+.coverage
+.pytest_cache/
+
+db.sqlite3
