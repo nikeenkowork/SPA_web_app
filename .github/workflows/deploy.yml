@@ -91,7 +91,7 @@ jobs:
         run: |
           ssh "$SERVER_USER@$SERVER_HOST" '
             set -e
-            cd /opt/SPA_web_app
+            cd /home/deploy/SPA_web_app
             git fetch origin homework/docker-compose
             git reset --hard origin/homework/docker-compose
             docker compose up -d --build
