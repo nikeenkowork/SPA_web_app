@@ -49,9 +49,9 @@ class CourseViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         course = serializer.save()
 
-        subscriptions = Subscription.objects.filter(
-            course=course
-        ).select_related("user")
+        subscriptions = Subscription.objects.filter(course=course).select_related(
+            "user"
+        )
 
         for subscription in subscriptions:
             send_course_update_email.delay(

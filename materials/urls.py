@@ -8,7 +8,6 @@ from .views import (
     LessonRetrieveUpdateDestroyView,
 )
 
-
 router = DefaultRouter()
 router.register("courses", CourseViewSet, basename="course")
 

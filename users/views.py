@@ -64,8 +64,7 @@ class RegistrationView(generics.CreateAPIView):
 @extend_schema(
     summary="Добавление или удаление подписки",
     description=(
-        "Добавляет подписку пользователя на курс "
-        "или удаляет существующую подписку."
+        "Добавляет подписку пользователя на курс " "или удаляет существующую подписку."
     ),
     request=SubscriptionSerializer,
     responses={

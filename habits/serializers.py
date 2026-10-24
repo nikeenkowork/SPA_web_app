@@ -18,8 +18,7 @@ class HabitSerializer(serializers.ModelSerializer):
 
         if reward and related_habit:
             raise serializers.ValidationError(
-                "Нельзя одновременно указывать вознаграждение "
-                "и связанную привычку."
+                "Нельзя одновременно указывать вознаграждение " "и связанную привычку."
             )
 
         if duration > 120:

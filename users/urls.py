@@ -31,8 +31,8 @@ urlpatterns = [
         name="token_refresh",
     ),
     path(
-    "payments/create/",
-    CreatePaymentView.as_view(),
-    name="payment-create",
-),
+        "payments/create/",
+        CreatePaymentView.as_view(),
+        name="payment-create",
+    ),
 ]

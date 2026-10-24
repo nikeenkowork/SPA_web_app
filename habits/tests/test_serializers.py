@@ -4,7 +4,6 @@ from rest_framework.test import APITestCase
 from habits.models import Habit
 from habits.serializers import HabitSerializer
 
-
 User = get_user_model()
 
 
@@ -64,16 +63,12 @@ class HabitSerializerTests(APITestCase):
         self.assertIn("Нельзя одновременно указывать", str(serializer.errors))
 
     def test_duration_cannot_exceed_120_seconds(self):
-        serializer = HabitSerializer(
-            data=self.get_data(duration=121)
-        )
+        serializer = HabitSerializer(data=self.get_data(duration=121))
 
         self.assertFalse(serializer.is_valid())
 
     def test_periodicity_must_be_from_1_to_7(self):
-        serializer = HabitSerializer(
-            data=self.get_data(periodicity=8)
-        )
+        serializer = HabitSerializer(data=self.get_data(periodicity=8))
 
         self.assertFalse(serializer.is_valid())
 

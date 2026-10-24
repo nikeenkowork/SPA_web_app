@@ -5,7 +5,6 @@ from rest_framework.test import APITestCase
 
 from habits.models import Habit
 
-
 User = get_user_model()
 
 
@@ -188,9 +187,7 @@ class HabitViewSetTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
-        self.assertFalse(
-            Habit.objects.filter(id=self.habit.id).exists()
-        )
+        self.assertFalse(Habit.objects.filter(id=self.habit.id).exists())
 
     def test_user_cannot_delete_other_users_habit(self):
         url = reverse(
@@ -202,9 +199,7 @@ class HabitViewSetTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-        self.assertTrue(
-            Habit.objects.filter(id=self.other_habit.id).exists()
-        )
+        self.assertTrue(Habit.objects.filter(id=self.other_habit.id).exists())
 
     def test_public_habits_endpoint_returns_public_habits(self):
         public_habit = Habit.objects.create(

@@ -10,6 +10,7 @@ class IsModerator(BasePermission):
             and request.user.groups.filter(name="Модераторы").exists()
         )
 
+
 class IsOwner(BasePermission):
     """Разрешение только для владельца объекта."""
 

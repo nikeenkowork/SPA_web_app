@@ -45,28 +45,19 @@ class Habit(models.Model):
     def clean(self):
         if self.reward and self.related_habit:
             raise ValidationError(
-                "Нельзя одновременно указывать вознаграждение "
-                "и связанную привычку."
+                "Нельзя одновременно указывать вознаграждение " "и связанную привычку."
             )
 
         if self.duration > 120:
-            raise ValidationError(
-                "Время выполнения не может превышать 120 секунд."
-            )
+            raise ValidationError("Время выполнения не может превышать 120 секунд.")
 
         if not 1 <= self.periodicity <= 7:
-            raise ValidationError(
-                "Периодичность должна быть от 1 до 7 дней."
-            )
+            raise ValidationError("Периодичность должна быть от 1 до 7 дней.")
 
         if self.related_habit and not self.related_habit.is_pleasant:
-            raise ValidationError(
-                "Связанная привычка должна быть приятной."
-            )
+            raise ValidationError("Связанная привычка должна быть приятной.")
 
-        if self.is_pleasant and (
-            self.reward or self.related_habit
-        ):
+        if self.is_pleasant and (self.reward or self.related_habit):
             raise ValidationError(
                 "У приятной привычки не может быть "
                 "вознаграждения или связанной привычки."
