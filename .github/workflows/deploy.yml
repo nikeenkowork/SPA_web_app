@@ -1,18 +1,35 @@
+
+# Название рабочего процесса GitHub Actions.
+# Отображается во вкладке Actions репозитория.
 name: Django CI/CD
 
+# События, которые запускают выполнение рабочего процесса.
 on:
+  # Запуск при отправке изменений (push) в указанную ветку.
   push:
-#  pull_request:
+    branches:
+      - homework/docker-compose
 
+  # Запуск при создании или обновлении Pull Request в ветку develop.
+  pull_request:
+    branches:
+      - develop
+
+# Права доступа рабочего процесса к репозиторию.
 permissions:
+  # Разрешить только чтение содержимого репозитория.
   contents: read
 
 jobs:
+  # Задача для запуска тестов и проверки качества Python-кода.
   test:
-    name: Run Django tests
-    runs-on: ubuntu-latest
+    name: Run tests and linting
+    runs-on: ubuntu-24.04
 
+    # Запуск вспомогательных сервисов PostgreSQL и Redis
+    # для работы Django-приложения во время тестирования.
     services:
+      # Сервис базы данных PostgreSQL.
       postgres:
         image: postgres:18
         env:
@@ -21,78 +38,191 @@ jobs:
           POSTGRES_PASSWORD: test_password
         ports:
           - 5432:5432
+
+        # Проверка готовности PostgreSQL принимать подключения.
+        # pg_isready проверяет доступность базы данных.
         options: >-
           --health-cmd "pg_isready -U test_user -d test_db"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
 
+      # Сервис Redis для кэширования и работы Celery.
       redis:
         image: redis:8
         ports:
           - 6379:6379
 
     steps:
+      # Получение исходного кода проекта из GitHub-репозитория.
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Установка необходимой версии Python.
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
+          # Кэширование зависимостей Poetry для ускорения
+          # последующих запусков рабочего процесса.
+          cache: poetry
+
+      # Установка менеджера зависимостей Poetry.
       - name: Install Poetry
         uses: snok/install-poetry@v1
 
+      # Установка зависимостей проекта, включая инструменты разработки.
+      # Параметр --with dev подключает группу dev.
+      # Параметр --no-root пропускает установку самого проекта как пакета.
       - name: Install dependencies
         run: poetry install --with dev --no-root
 
+      # Проверка форматирования Python-кода с помощью Black.
+      # Параметр --check проверяет код, не изменяя исходные файлы.
+      - name: Run Black
+        run: poetry run black --check .
+
+      # Установка Flake8 для проверки качества и стиля Python-кода.
+      - name: Install Flake8
+        run: pip install flake8
+
+      # Проверка Python-кода на нарушения стиля и потенциальные ошибки.
+      - name: Run Flake8
+        run: flake8 .
+
+      # Запуск автоматических тестов Django.
       - name: Run Django tests
         env:
+          # Переменные окружения Django-приложения.
           SECRET_KEY: ci-only-test-secret
           STRIPE_SECRET_KEY: sk_test_placeholder
           DEBUG: "False"
           ALLOWED_HOSTS: localhost,127.0.0.1
+
+          # Параметры подключения к базе данных PostgreSQL.
           POSTGRES_DB: test_db
           POSTGRES_USER: test_user
           POSTGRES_PASSWORD: test_password
           POSTGRES_HOST: 127.0.0.1
           POSTGRES_PORT: "5432"
+
+          # Параметры подключения к Redis.
           REDIS_HOST: 127.0.0.1
           REDIS_PORT: "6379"
           REDIS_DB: "0"
+
+          # Адрес Redis для Celery.
+          # BROKER_URL используется для передачи задач.
+          # RESULT_BACKEND используется для хранения результатов задач.
           CELERY_BROKER_URL: redis://127.0.0.1:6379/0
           CELERY_RESULT_BACKEND: redis://127.0.0.1:6379/0
+
+        # Выполнение тестов Django через Poetry.
         run: poetry run python manage.py test
 
+  # Задача для проверки конфигурации Docker Compose
+  # и успешной сборки Docker-образов.
+  docker-build:
+    name: Validate Docker build
+    runs-on: ubuntu-24.04
+
+    # Запускать задачу только после успешного выполнения тестов.
+    needs: test
+
+    steps:
+      # Получение исходного кода проекта из репозитория.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Создание пустого файла .env,
+      # необходимого для проверки конфигурации Docker Compose.
+      - name: Create empty environment file
+        run: touch .env
+
+      # Проверка корректности конфигурации Docker Compose.
+      # Параметр --quiet отключает подробный вывод.
+      # Контейнеры при этом не запускаются.
+      - name: Validate Docker Compose
+        run: docker compose config --quiet
+
+      # Сборка всех Docker-образов,
+      # определённых в конфигурации Docker Compose.
+      - name: Build Docker images
+        run: docker compose build
+
+  # Задача для автоматического развёртывания приложения
+  # на удалённом сервере Hetzner.
   deploy:
     name: Deploy to Hetzner
-    runs-on: ubuntu-latest
-    needs: test
+    runs-on: ubuntu-24.04
+
+    # Дождаться успешного выполнения обеих предыдущих задач:
+    # тестирования и сборки Docker-образов.
+    needs:
+      - test
+      - docker-build
+
+    # Выполнять развёртывание только при push
+    # непосредственно в ветку homework/docker-compose.
+    # При создании Pull Request развёртывание не запускается.
     if: github.event_name == 'push' && github.ref == 'refs/heads/homework/docker-compose'
 
     steps:
+      # Настройка SSH-аутентификации для подключения к серверу.
+      # Приватный SSH-ключ хранится в GitHub Secrets.
       - name: Setup SSH Agent
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.SERVER_SSH_KEY }}
 
+      # Добавление SSH-ключа удалённого сервера в список доверенных хостов.
+      # Это позволяет избежать интерактивного подтверждения
+      # подлинности сервера при подключении по SSH.
       - name: Trust Remote Host
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_PORT: ${{ secrets.SERVER_PORT }}
         run: |
           mkdir -p ~/.ssh
-          ssh-keyscan -p ${{ secrets.SERVER_PORT }} -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -p "$SERVER_PORT" -H "$SERVER_HOST" >> ~/.ssh/known_hosts
 
-
+      # Подключение к серверу Hetzner и развёртывание приложения.
       - name: Deploy application
         env:
           SERVER_HOST: ${{ secrets.SERVER_HOST }}
           SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_PORT: ${{ secrets.SERVER_PORT }}
         run: |
-          ssh "$SERVER_USER@$SERVER_HOST" '
+          # Установка SSH-соединения с удалённым сервером.
+          ssh -p "$SERVER_PORT" "$SERVER_USER@$SERVER_HOST" '
+            # Прекратить выполнение команд при возникновении ошибки.
             set -e
+
+            # Переход в директорию Django-приложения на сервере.
             cd /home/deploy/SPA_web_app
+
+            # Получение последних изменений из удалённой ветки Git.
             git fetch origin homework/docker-compose
+
+            # Приведение локальной рабочей копии
+            # в соответствие с удалённой веткой.
             git reset --hard origin/homework/docker-compose
-            docker compose up -d --build
-            docker compose exec -T web python manage.py migrate
+
+            # Сборка обновлённых Docker-образов приложения.
+            docker compose build
+
+            # Выполнение миграций базы данных Django.
+            # Параметр --noinput отключает запросы подтверждения.
+            docker compose run --rm web python manage.py migrate --noinput
+
+            # Запуск контейнеров в фоновом режиме.
+            # Параметр --remove-orphans удаляет контейнеры,
+            # которые больше не описаны в конфигурации Compose.
+            docker compose up -d --remove-orphans
+
+            # Удаление неиспользуемых Docker-образов
+            # для освобождения дискового пространства сервера.
+            # Параметр -f отключает запрос подтверждения.
+            docker image prune -f
           '
