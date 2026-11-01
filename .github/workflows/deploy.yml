@@ -172,7 +172,7 @@ jobs:
       # Настройка SSH-аутентификации для подключения к серверу.
       # Приватный SSH-ключ хранится в GitHub Secrets.
       - name: Setup SSH Agent
-        uses: webfactory/ssh-agent@v0.9.0
+        uses: webfactory/ssh-agent@v0.10.0
         with:
           ssh-private-key: ${{ secrets.SERVER_SSH_KEY }}
 
