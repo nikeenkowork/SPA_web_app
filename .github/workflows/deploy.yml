@@ -1,4 +1,3 @@
-
 # Название рабочего процесса GitHub Actions.
 # Отображается во вкладке Actions репозитория.
 name: Django CI/CD
