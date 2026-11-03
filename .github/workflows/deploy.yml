@@ -10,7 +10,7 @@ permissions:
 jobs:
   test:
     name: Run Django tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     services:
       postgres:
@@ -33,10 +33,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
@@ -50,7 +50,7 @@ jobs:
         env:
           SECRET_KEY: ci-only-test-secret
           STRIPE_SECRET_KEY: sk_test_placeholder
-          DEBUG: "False"
+          DEBUG: "True"
           ALLOWED_HOSTS: localhost,127.0.0.1
           POSTGRES_DB: test_db
           POSTGRES_USER: test_user
