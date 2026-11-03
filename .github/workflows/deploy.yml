@@ -21,6 +21,15 @@ jobs:
     name: Run tests and linting
     runs-on: ubuntu-24.04
 
+    steps:
+      - name: Run tests and linting
+        env:
+          DEBUG: "True"
+        run: |
+          poetry run black --check .
+          flake8 .
+          poetry run python manage.py test
+
     # Вспомогательные сервисы.
     services:
       postgres:
